@@ -6,9 +6,9 @@
 /HeatTransfer/*
 !/HeatTransfer/Property Sheets
 !/HeatTransfer/*.sln
-!/HeatTransfer/*.vcxproj
-!/HeatTransfer/*.vcxproj.user
-!/HeatTransfer/*.vcxproj.filters
+!/HeatTransfer/HeatTransfer/*.vcxproj
+!/HeatTransfer/HeatTransfer/*.vcxproj.user
+!/HeatTransfer/HeatTransfer/*.vcxproj.filters
 !/HeatTransfer/scripts/
 
 # Application
