@@ -18,10 +18,10 @@
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GPUOpenCLProjectforWindows.cpp">
+    <ClCompile Include="..\..\Source\ocl_args.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\Main.cpp">
+    <ClCompile Include="..\..\Source\log_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +29,10 @@
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GPUOpenCLProjectforWindows.h">
+    <ClInclude Include="..\..\Source\ocl_args.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\log_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
