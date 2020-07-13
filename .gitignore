@@ -1,35 +1,18 @@
-# Visual Studio
-.vs/
+# General
+/*
+!.gitignore
 
-# Prerequisites
-*.d
+!/HeatTransfer
+/HeatTransfer/*
+!/HeatTransfer/Property Sheets
+!/HeatTransfer/*.sln
+!/HeatTransfer/*.vcxproj
+!/HeatTransfer/*.vcxproj.user
+!/HeatTransfer/*.vcxproj.filters
+!/HeatTransfer/scripts/
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Application
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+!/libs
+!/Resources
+!/Source
