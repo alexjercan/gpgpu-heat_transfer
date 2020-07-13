@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeatTransfer", "HeatTransfer\HeatTransfer.vcxproj", "{F685B66A-9C7A-4976-9AC0-28A5804612FD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HeatTransfer", "HeatTransfer\HeatTransfer.vcxproj", "{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,19 +13,19 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Debug|x64.ActiveCfg = Debug|x64
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Debug|x64.Build.0 = Debug|x64
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Debug|x86.ActiveCfg = Debug|Win32
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Debug|x86.Build.0 = Debug|Win32
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Release|x64.ActiveCfg = Release|x64
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Release|x64.Build.0 = Release|x64
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Release|x86.ActiveCfg = Release|Win32
-		{F685B66A-9C7A-4976-9AC0-28A5804612FD}.Release|x86.Build.0 = Release|Win32
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Debug|x64.ActiveCfg = Debug|x64
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Debug|x64.Build.0 = Debug|x64
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Debug|x86.ActiveCfg = Debug|Win32
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Debug|x86.Build.0 = Debug|Win32
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Release|x64.ActiveCfg = Release|x64
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Release|x64.Build.0 = Release|x64
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Release|x86.ActiveCfg = Release|Win32
+		{170FF7C9-E0BD-4D9A-A7B9-7B38E21ACACB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {46B36035-E7B1-4FFC-9D8E-DF029240CEBA}
+		SolutionGuid = {698E822A-BD23-495F-BBCC-7080BF753EA0}
 	EndGlobalSection
 EndGlobal

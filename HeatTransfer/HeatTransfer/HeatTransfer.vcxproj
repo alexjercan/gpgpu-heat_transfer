@@ -29,7 +29,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{f685b66a-9c7a-4976-9ac0-28a5804612fd}</ProjectGuid>
+    <ProjectGuid>{170ff7c9-e0bd-4d9a-a7b9-7b38e21acacb}</ProjectGuid>
     <RootNamespace>HeatTransfer</RootNamespace>
   </PropertyGroup>
   <!-- Workaround for VS Template engine (latest Windows SDK selection) -->
@@ -96,7 +96,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Intel_OpenCL_Build_Rules>
-      <Device>0</Device>
+      <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
       <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -116,7 +116,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Intel_OpenCL_Build_Rules>
-      <Device>0</Device>
+      <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
       <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -136,7 +136,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Intel_OpenCL_Build_Rules>
-      <Device>0</Device>
+      <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
       <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -162,7 +162,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Intel_OpenCL_Build_Rules>
-      <Device>0</Device>
+      <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
       <AdditionalIncludeDirectories>$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -184,6 +184,17 @@
       <Command>If exist "*.cl" copy "*.cl" "$(OutDir)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="GPUOpenCLProjectforWindows.cpp" />
+    <ClCompile Include="utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GPUOpenCLProjectforWindows.h" />
+    <ClInclude Include="utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Intel_OpenCL_Build_Rules Include="Template.cl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(INTELOCLSDKROOT)\BuildCustomizations\IntelOpenCL.targets" />
