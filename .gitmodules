@@ -1,0 +1,3 @@
+[submodule "HeatTransfer/vendor/GLFW"]
+	path = HeatTransfer/vendor/GLFW
+	url = https://github.com/glfw/glfw.git
