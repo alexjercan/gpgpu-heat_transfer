@@ -185,6 +185,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\Main.cpp" />
     <ClCompile Include="GPUOpenCLProjectforWindows.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
