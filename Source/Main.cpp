@@ -25,10 +25,10 @@ int _tmain(int argc, TCHAR* argv[])
     auto air_temperature = 10.0F;
     auto plate_temperature = 10.0F;
 
-    auto point_temperature = 100.0F;
+    auto point_temperature = 150.0F;
     auto point_x = array_width / 2;
     auto point_y = array_height / 2;
-    auto point_steps = 10u;
+    auto steps = 10;
 
     if (CL_SUCCESS != setup_open_cl(&ocl, device_type))
 	    return -1;
@@ -42,7 +42,7 @@ int _tmain(int argc, TCHAR* argv[])
         return -1;
     }
 
-    generate_input(input, array_width, array_height, plate_temperature, point_x, point_y, point_temperature);
+    generate_input(input, array_width, array_height, plate_temperature);
 
     if (CL_SUCCESS != create_buffer_arguments(&ocl, input, output, array_width, array_height))
 	    return -1;
@@ -51,8 +51,13 @@ int _tmain(int argc, TCHAR* argv[])
 	    return -1;
 
     do {
+        if (steps > 0)
+            steps--;
+        else
+            point_x = point_y = -1;
+    	
         auto axis = 'x';
-        if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, axis))
+        if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, point_x, point_y, point_temperature, axis))
 	        return -1;
         if (CL_SUCCESS != execute_add_kernel(&ocl, array_width, array_height))
 	        return -1;
@@ -62,10 +67,11 @@ int _tmain(int argc, TCHAR* argv[])
         ocl.input = aux;
 
         axis = 'y';
-        if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, axis))
+        if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, point_x, point_y, point_temperature, axis))
             return -1;
         if (CL_SUCCESS != execute_add_kernel(&ocl, array_width, array_height))
             return -1;
+    	
     } while (false == read_and_verify(&ocl, array_width, array_height));
 
     _aligned_free(input);

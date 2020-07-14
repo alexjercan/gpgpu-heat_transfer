@@ -7,13 +7,11 @@
 #include "ocl_args.h"
 
 
-void generate_input(cl_float* input_array, const cl_uint array_width, const cl_uint array_height, const cl_float temperature, const cl_uint point_x, const cl_uint point_y, const cl_float point_temperature)
+void generate_input(cl_float* input_array, const cl_uint array_width, const cl_uint array_height, const cl_float temperature)
 {
     const auto array_size = array_width * array_height;
     for (cl_uint i = 0; i < array_size; ++i)
 	    input_array[i] = temperature;
-
-    input_array[point_y * array_width + point_x] = point_temperature;
 }
 
 int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, cl_float* output, const cl_uint array_width, const cl_uint array_height)

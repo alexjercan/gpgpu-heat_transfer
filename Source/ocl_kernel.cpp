@@ -85,7 +85,7 @@ int create_and_build_program(ocl_args_d_t* ocl, const char* program_name)
     return err;
 }
 
-cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float temperature, char axis)
+cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float temperature, cl_uint point_x, cl_uint point_y, cl_float point_temperature, char axis)
 {
     auto err = CL_SUCCESS;
 
@@ -124,7 +124,28 @@ cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, c
         return err;
     }
 
-    err = clSetKernelArg(ocl->kernel, 5, sizeof(char), static_cast<void*>(&axis));
+    err = clSetKernelArg(ocl->kernel, 5, sizeof(cl_uint), static_cast<void*>(&point_x));
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        return err;
+    }
+
+    err = clSetKernelArg(ocl->kernel, 6, sizeof(cl_uint), static_cast<void*>(&point_y));
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        return err;
+    }
+
+    err = clSetKernelArg(ocl->kernel, 7, sizeof(cl_float), static_cast<void*>(&point_temperature));
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        return err;
+    }
+
+    err = clSetKernelArg(ocl->kernel, 8, sizeof(char), static_cast<void*>(&axis));
     if (CL_SUCCESS != err)
     {
         log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
