@@ -1,10 +1,8 @@
 #pragma once
+#include <CL/cl.h>
 
+const char* translate_open_cl_error(const cl_int error_code);
 
-#pragma once
-
-// Print useful information to the default output. Same usage as with printf
 void log_info(const char* str, ...);
 
-// Print error notification to the default output. Same usage as with printf
 void log_error(const char* str, ...);

@@ -186,15 +186,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\log_utils.cpp" />
+    <ClCompile Include="..\..\Source\main.cpp" />
     <ClCompile Include="..\..\Source\ocl_args.cpp" />
-    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="..\..\Source\ocl_memory.cpp" />
+    <ClCompile Include="..\..\Source\ocl_kernel.cpp" />
+    <ClCompile Include="..\..\Source\ocl_context.cpp" />
+    <ClCompile Include="..\..\Source\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\log_utils.h" />
     <ClInclude Include="..\..\Source\ocl_args.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="..\..\Source\ocl_memory.h" />
+    <ClInclude Include="..\..\Source\ocl_kernel.h" />
+    <ClInclude Include="..\..\Source\ocl_context.h" />
+    <ClInclude Include="..\..\Source\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <Intel_OpenCL_Build_Rules Include="simulation.cl" />
     <Intel_OpenCL_Build_Rules Include="Template.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
