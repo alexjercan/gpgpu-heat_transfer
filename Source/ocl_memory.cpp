@@ -14,7 +14,7 @@ void generate_input(cl_float* input_array, const cl_uint array_width, const cl_u
 	    input_array[i] = temperature;
 }
 
-int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, cl_float* output, const cl_uint array_width, const cl_uint array_height)
+int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, const cl_uint array_width, const cl_uint array_height)
 {
     auto err = CL_SUCCESS;
 
@@ -47,7 +47,7 @@ int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, cl_float* output
         return err;
     }
 
-    ocl->output = clCreateImage(ocl->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &format, &desc, output, &err);
+    ocl->output = clCreateImage(ocl->context, CL_MEM_READ_WRITE, &format, &desc, nullptr, &err);
     if (CL_SUCCESS != err)
     {
         log_error("Error: clCreateImage for output returned %s\n", translate_open_cl_error(err));

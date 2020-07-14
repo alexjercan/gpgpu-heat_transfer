@@ -85,11 +85,9 @@ int create_and_build_program(ocl_args_d_t* ocl, const char* program_name)
     return err;
 }
 
-cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float temperature, cl_uint point_x, cl_uint point_y, cl_float point_temperature, char axis)
+cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float air_temperature, cl_uint point_x, cl_uint point_y, cl_float point_temperature, char axis)
 {
-    auto err = CL_SUCCESS;
-
-    err = clSetKernelArg(ocl->kernel, 0, sizeof(cl_mem), static_cast<void*>(&ocl->input));
+    auto err =  clSetKernelArg(ocl->kernel, 0, sizeof(cl_mem), static_cast<void*>(&ocl->input));
     if (CL_SUCCESS != err)
     {
         log_error("error: Failed to set argument input, returned %s\n", translate_open_cl_error(err));
@@ -106,49 +104,49 @@ cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, c
     err = clSetKernelArg(ocl->kernel, 2, sizeof(cl_uint), static_cast<void*>(&width));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument width, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
     err = clSetKernelArg(ocl->kernel, 3, sizeof(cl_uint), static_cast<void*>(&height));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument height, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
-    err = clSetKernelArg(ocl->kernel, 4, sizeof(cl_float), static_cast<void*>(&temperature));
+    err = clSetKernelArg(ocl->kernel, 4, sizeof(cl_float), static_cast<void*>(&air_temperature));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument air_temperature, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
     err = clSetKernelArg(ocl->kernel, 5, sizeof(cl_uint), static_cast<void*>(&point_x));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument point_x, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
     err = clSetKernelArg(ocl->kernel, 6, sizeof(cl_uint), static_cast<void*>(&point_y));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument point_y, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
     err = clSetKernelArg(ocl->kernel, 7, sizeof(cl_float), static_cast<void*>(&point_temperature));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument point_temperature, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
     err = clSetKernelArg(ocl->kernel, 8, sizeof(char), static_cast<void*>(&axis));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument temperature, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument axis, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 
@@ -157,11 +155,9 @@ cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, c
 
 cl_uint execute_add_kernel(ocl_args_d_t* ocl, const cl_uint width, const cl_uint height)
 {
-    auto err = CL_SUCCESS;
-
     size_t global_work_size[2] = { width, height };
 
-    err = clEnqueueNDRangeKernel(ocl->command_queue, ocl->kernel, 2, nullptr, global_work_size, nullptr, 0, nullptr, nullptr);
+    auto err = clEnqueueNDRangeKernel(ocl->command_queue, ocl->kernel, 2, nullptr, global_work_size, nullptr, 0, nullptr, nullptr);
     if (CL_SUCCESS != err)
     {
         log_error("Error: Failed to run kernel, return %s\n", translate_open_cl_error(err));
