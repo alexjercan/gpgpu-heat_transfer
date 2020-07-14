@@ -47,7 +47,7 @@ int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, const cl_uint ar
         return err;
     }
 
-    ocl->output = clCreateImage(ocl->context, CL_MEM_READ_WRITE, &format, &desc, nullptr, &err);
+    ocl->output = clCreateImage(ocl->context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &format, &desc, input, &err);
     if (CL_SUCCESS != err)
     {
         log_error("Error: clCreateImage for output returned %s\n", translate_open_cl_error(err));
@@ -86,22 +86,21 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
     }
 
     const auto size = width * height;
-	
-    for (unsigned int k = 0; k < width; k++)
-    {
-        for (unsigned int kk = 0; kk < height; kk++)
-        {
-            log_info("%f ", result_ptr[k * width + kk]);
-        }
-        log_info("\n");
-    }
-    log_info("\n");
 
     for (unsigned int k = 0; k < size; k++)
     {
         if (abs(input_ptr[k] - result_ptr[k]) >= CL_FLT_EPSILON * 1000)
         {
             result = false;
+            for (unsigned int k = 0; k < width; k++)
+            {
+                for (unsigned int kk = 0; kk < height; kk++)
+                {
+                    log_info("%f ", result_ptr[k * width + kk]);
+                }
+                log_info("\n");
+            }
+            log_info("\n");
             break;
         }
     }
@@ -111,10 +110,6 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
     {
         log_error("Error: clEnqueueUnmapMemObject() returned %s\n", translate_open_cl_error(err));
     }
-
-    auto* aux = ocl->output;
-    ocl->output = ocl->input;
-    ocl->input = aux;
 
     return result;
 }
