@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "CL/cl.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <Windows.h>
 #include <GL/glew.h>
@@ -14,6 +17,26 @@
 #include "ocl_context.h"
 #include "ocl_kernel.h"
 #include "ocl_memory.h"
+
+static const char* vertex_shader_text =
+"#version 110\n"
+"uniform mat4 MVP;\n"
+"attribute vec3 vCol;\n"
+"attribute vec2 vPos;\n"
+"varying vec3 color;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
+"    color = vCol;\n"
+"}\n";
+
+static const char* fragment_shader_text =
+"#version 110\n"
+"varying vec3 color;\n"
+"void main()\n"
+"{\n"
+"    gl_FragColor = vec4(color, 1.0);\n"
+"}\n";
 
 int setup_ocl(ocl_args_d_t* ocl, const cl_device_type device_type, const char* program_name, const char* kernel_name)
 {
@@ -98,17 +121,31 @@ int main()
 	const auto* kernel_name = "simulate";
 
 	/*constant parameters*/
-	const cl_uint array_width = 16;
-	const cl_uint array_height = 16;
+	const cl_uint array_width = 640;
+	const cl_uint array_height = 480;
 	const auto plate_initial_temperature = 10.0F;
 
 	/*variable parameters*/
-	auto air_temperature = 10.0F;
+	auto air_temperature = 100.0F;
 	auto point_temperature = 1500.0F;
 	auto point_x = array_width / 2;
 	auto point_y = array_height / 2;
 	auto steps = 10;
 	auto simulate_ocl = true;
+
+	/*initialize the plate*/
+	auto* plate_points = static_cast<struct vertex_args*>(calloc(array_width * array_height, sizeof(struct vertex_args)));
+	for (cl_uint i = 0; i < array_height; i++)
+	{
+		for (cl_uint j = 0; j < array_width; j++)
+		{
+			plate_points[i * array_width + j].x = 2 * (j / static_cast<float>(array_width) - 0.5F);
+			plate_points[i * array_width + j].y = 2 * (i / static_cast<float>(array_height) - 0.5F);
+			plate_points[i * array_width + j].r = 1.0F;
+			plate_points[i * array_width + j].g = 1.0F - plate_initial_temperature / point_temperature;
+			plate_points[i * array_width + j].b = 1.0F - plate_initial_temperature / point_temperature;
+		}
+	}
 
 	/*setup openCL kernel*/
 	if (CL_SUCCESS != setup_ocl(&ocl, device_type, program_name, kernel_name))
@@ -140,14 +177,45 @@ int main()
 		return -1;
 
 	/*setup openGL buffers*/
-	GLuint ogl_buffer;
-	glGenBuffers(1, &ogl_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, ogl_buffer);
-	//glBufferData(GL_ARRAY_BUFFER, array_width * array_height * sizeof(float), )
+	GLuint vertex_buffer;
+
+	glGenBuffers(1, &vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, array_width * array_height * sizeof(struct vertex_args), plate_points, GL_DYNAMIC_DRAW);
+
+	/*setup openGL shader*/
+	auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertex_shader, 1, &vertex_shader_text, nullptr);
+	glCompileShader(vertex_shader);
+
+	auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragment_shader, 1, &fragment_shader_text, nullptr);
+	glCompileShader(fragment_shader);
+
+	auto program = glCreateProgram();
+	glAttachShader(program, vertex_shader);
+	glAttachShader(program, fragment_shader);
+	glLinkProgram(program);
+
+	auto mvp_location = glGetUniformLocation(program, "MVP");
+	const auto vpos_location = glGetAttribLocation(program, "vPos");
+	const auto vcol_location = glGetAttribLocation(program, "vCol");
+
+	glEnableVertexAttribArray(vpos_location);
+	glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(plate_points[0]), static_cast<void*>(nullptr));
+	glEnableVertexAttribArray(vcol_location);
+	glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(plate_points[0]), reinterpret_cast<void*>(sizeof(float) * 2));
 	
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+    	/*setup viewport*/
+	    int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+	    auto ratio = width / static_cast<float>(height);
+
+		glViewport(0, 0, width, height);
+    	
     	/*simulate if the mouse is in the window or if there is not an equilibrium*/
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
@@ -163,10 +231,20 @@ int main()
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-    	/*read temperatures*/
-		simulate_ocl = !read_and_verify(&ocl, array_width, array_height);
+    	/*read temperatures and update the plate points*/
+		simulate_ocl = !read_and_verify(&ocl, array_width, array_height, plate_points);
+
+		/*setup camera*/
+		glm::mat4x4 m(1.0F);
+		auto p = glm::ortho(-1.0F, 1.0F, 1.0F, -1.0F);
+    	auto mvp = p * m;
 
 		/*draw pixels*/
+		glUseProgram(program);
+		glUniformMatrix4fv(mvp_location, 1, GL_FALSE, glm::value_ptr(mvp));
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, array_width* array_height * sizeof(struct vertex_args), plate_points);
+		glDrawArrays(GL_POINTS, 0, array_width * array_height);
     	
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -176,5 +254,6 @@ int main()
     }
 
     glfwTerminate();
+	free(plate_points);
     return 0;
 }

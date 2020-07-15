@@ -58,7 +58,7 @@ int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, const cl_uint ar
     return CL_SUCCESS;
 }
 
-bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint height)
+bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint height, struct vertex_args plate_points[])
 {
     auto err = CL_SUCCESS;
     auto result = true;
@@ -89,20 +89,10 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
 
     for (unsigned int k = 0; k < size; k++)
     {
-        if (abs(input_ptr[k] - result_ptr[k]) >= CL_FLT_EPSILON * 1000)
-        {
-            result = false;
-            for (unsigned int k = 0; k < width; k++)
-            {
-                for (unsigned int kk = 0; kk < height; kk++)
-                {
-                    log_info("%f ", result_ptr[k * width + kk]);
-                }
-                log_info("\n");
-            }
-            log_info("\n");
-            break;
-        }
+		plate_points[k].g = 1.0F - result_ptr[k] / 1500.0F;
+		plate_points[k].b = 1.0F - result_ptr[k] / 1500.0F;
+		if (result && abs(input_ptr[k] - result_ptr[k]) >= CL_FLT_EPSILON * 1000)
+		    result = false;
     }
 
     err = clEnqueueUnmapMemObject(ocl->command_queue, ocl->output, result_ptr, 0, nullptr, nullptr);
