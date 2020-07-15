@@ -7,6 +7,7 @@
 #include "CL/cl.h"
 
 #include <Windows.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "log_utils.h"
@@ -135,6 +136,15 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+	if (GLEW_OK != glewInit())
+		return -1;
+
+	/*setup openGL buffers*/
+	GLuint ogl_buffer;
+	glGenBuffers(1, &ogl_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, ogl_buffer);
+	//glBufferData(GL_ARRAY_BUFFER, array_width * array_height * sizeof(float), )
+	
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -157,7 +167,6 @@ int main()
 		simulate_ocl = !read_and_verify(&ocl, array_width, array_height);
 
 		/*draw pixels*/
-    	
     	
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
