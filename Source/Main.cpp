@@ -40,7 +40,7 @@ static const char* fragment_shader_text =
 
 int setup_ocl(ocl_args_d_t* ocl, const cl_device_type device_type, const char* program_name, const char* kernel_name)
 {
-	if (CL_SUCCESS != setup_open_cl(ocl, device_type))
+	if (CL_SUCCESS != setup_open_cl(ocl, device_type, "Intel"))
 		return -1;
 
 	if (CL_SUCCESS != setup_ocl_kernel(ocl, program_name, kernel_name))
@@ -119,20 +119,29 @@ int main()
 	const cl_device_type device_type = CL_DEVICE_TYPE_GPU;
 	const auto* program_name = "simulation.cl";
 	const auto* kernel_name = "simulate";
+	const auto* input_file = "input.in";
+
+	auto* file = fopen(input_file, "r");
+	if (nullptr == file)
+	{
+		log_error("no file\n");
+		return -1;
+	}
 
 	/*constant parameters*/
-	const cl_uint array_width = 640;
-	const cl_uint array_height = 480;
-	const auto plate_initial_temperature = 10.0F;
+	cl_uint array_width = 640;
+	cl_uint array_height = 480;
+	cl_float plate_initial_temperature = 10.0F;
 
 	/*variable parameters*/
 	auto air_temperature = 100.0F;
 	auto point_temperature = 1500.0F;
-	auto point_x = array_width / 2;
-	auto point_y = array_height / 2;
-	auto steps = 10;
+	auto point_x = 0;
+	auto point_y = 0;
 	auto simulate_ocl = true;
 
+	fscanf(file, "%u%u%f%f%f", &array_width, &array_height, &plate_initial_temperature, &air_temperature, &point_temperature);
+	
 	/*initialize the plate*/
 	auto* plate_points = static_cast<struct vertex_args*>(calloc(array_width * array_height, sizeof(struct vertex_args)));
 	for (cl_uint i = 0; i < array_height; i++)
@@ -157,6 +166,8 @@ int main()
 
 	/*show device info*/
 	log_device_info(ocl);
+	/*show simulation info*/
+	log_info("==Heat transfer simulation==\nwidth=%u\nheight=%u\nplate_temp=%f\nair_temp=%f\npoint_temp=%f\n", array_width, array_height, plate_initial_temperature, air_temperature, point_temperature);
 
     /* Create a windowed mode window and its OpenGL context */
 	GLFWwindow* window = glfwCreateWindow(array_width, array_height, "Heat Transfer Simulation", nullptr, nullptr);
