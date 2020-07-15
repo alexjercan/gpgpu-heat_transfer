@@ -150,9 +150,9 @@ int main()
 		{
 			plate_points[i * array_width + j].x = 2 * (j / static_cast<float>(array_width) - 0.5F);
 			plate_points[i * array_width + j].y = 2 * (i / static_cast<float>(array_height) - 0.5F);
-			plate_points[i * array_width + j].r = 1.0F;
-			plate_points[i * array_width + j].g = 1.0F - plate_initial_temperature / point_temperature;
-			plate_points[i * array_width + j].b = 1.0F - plate_initial_temperature / point_temperature;
+			plate_points[i * array_width + j].r = 0.1F;
+			plate_points[i * array_width + j].g = 0.1F;
+			plate_points[i * array_width + j].b = 0.1F;
 		}
 	}
 

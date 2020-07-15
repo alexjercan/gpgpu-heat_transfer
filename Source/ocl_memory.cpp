@@ -89,8 +89,30 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
 
     for (unsigned int k = 0; k < size; k++)
     {
-		plate_points[k].g = 1.0F - result_ptr[k] / 1500.0F;
-		plate_points[k].b = 1.0F - result_ptr[k] / 1500.0F;
+        if (result_ptr[k] < temperature_color[9].x)
+        {
+            for (auto i = 0; i < TEMPERATURES_COUNT - 1; i++)
+            {
+                if (result_ptr[k] < temperature_color[i].y)
+                {
+                    const auto diff = result_ptr[k] - temperature_color[i].x;
+                    const auto diff_total = temperature_color[i].y - temperature_color[i].x;
+                    const auto proc = diff / diff_total;
+
+                    plate_points[k].r = temperature_color[i].r + (temperature_color[i + 1].r - temperature_color[i].r) * proc;
+                    plate_points[k].g = temperature_color[i].g + (temperature_color[i + 1].g - temperature_color[i].g) * proc;
+                    plate_points[k].b = temperature_color[i].b + (temperature_color[i + 1].b - temperature_color[i].b) * proc;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            plate_points[k].r = temperature_color[TEMPERATURES_COUNT - 1].r;
+            plate_points[k].g = temperature_color[TEMPERATURES_COUNT - 1].g;
+            plate_points[k].b = temperature_color[TEMPERATURES_COUNT - 1].b;
+        }
+    		
 		if (result && abs(input_ptr[k] - result_ptr[k]) >= CL_FLT_EPSILON * 1000)
 		    result = false;
     }
