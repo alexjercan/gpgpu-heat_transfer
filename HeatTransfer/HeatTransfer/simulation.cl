@@ -23,13 +23,18 @@ __constant struct vertex_args temperature_color[TEMPERATURES_COUNT] = {
 	{1315.0F, -1.0F, 1.0F, 1.0F, 1.0F}, //White
 };
 
-__kernel void simulate(read_only image2d_t input, write_only image2d_t output, uint width, uint height, float air_temperature, uint point_x, uint point_y, float point_temperature, __global struct vertex_args* plate_points)
+__kernel void simulate(read_only image2d_t input, write_only image2d_t output, uint width, uint height, float air_temperature, uint point_x, uint point_y, float point_temperature, __global struct vertex_args* plate_points, float gpu_percenet)
 {
     int2 coords = (int2)(get_global_id(0), get_global_id(1));
 	int global_index = coords.y * width + coords.x;
 	float4 color = (float4)(0.0F, 0.0F, 0.0F, 0.0F);
 	float4 ext_color = (float4)(air_temperature, air_temperature, air_temperature, air_temperature);
 	int i, j;
+
+	if (global_index > width * height * gpu_percenet / 100.0F)
+	{
+		return;
+	}
 
 	if (point_x == coords.x && point_y == coords.y)
 	{

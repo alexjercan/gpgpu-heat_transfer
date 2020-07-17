@@ -99,7 +99,7 @@
       <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\includex86;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\imgui;$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\includex86;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;Win32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -119,7 +119,7 @@
       <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\includex86;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\imgui;$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\includex86;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;Win32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -185,6 +185,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Dependencies\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\Dependencies\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\..\Dependencies\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\Dependencies\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\Dependencies\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\Dependencies\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\Source\log_utils.cpp" />
     <ClCompile Include="..\..\Source\main.cpp" />
     <ClCompile Include="..\..\Source\ocl_args.cpp" />
@@ -194,6 +200,14 @@
     <ClCompile Include="..\..\Source\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Dependencies\imgui\imconfig.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imgui.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\..\Dependencies\imgui\imstb_truetype.h" />
     <ClInclude Include="..\..\Source\log_utils.h" />
     <ClInclude Include="..\..\Source\ocl_args.h" />
     <ClInclude Include="..\..\Source\ocl_memory.h" />

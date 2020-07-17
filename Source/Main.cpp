@@ -20,6 +20,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include "log_utils.h"
 #include "ocl_context.h"
 #include "ocl_kernel.h"
@@ -27,6 +31,7 @@
 #include "utils.h"
 
 #define APP_NAME "Heat Transfer Simulation"
+#define IMGUI_OFFSET_TOOLBOX 200
 
 static const char* vertex_shader_text =
 "#version 110\n"
@@ -97,13 +102,13 @@ int setup_device_memory(ocl_args_d_t* ocl, struct vertex_args* plate_points, con
     return CL_SUCCESS;
 }
 
-int execute_kernel(ocl_args_d_t& ocl, const cl_uint array_width, const cl_uint array_height, float air_temperature, float point_temperature, unsigned point_x, unsigned point_y)
+int execute_kernel(ocl_args_d_t& ocl, const cl_uint array_width, const cl_uint array_height, float air_temperature, float point_temperature, unsigned point_x, unsigned point_y, cl_float gpu_percent)
 {
 	auto* aux = ocl.output;
 	ocl.output = ocl.input;
 	ocl.input = aux;
 	
-	if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, point_x, point_y, point_temperature))
+	if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, point_x, point_y, point_temperature, gpu_percent))
 		return -1;
 	if (CL_SUCCESS != execute_add_kernel(&ocl, array_width, array_height))
 		return -1;
@@ -142,7 +147,7 @@ void draw_pixels(cl_uint array_width, cl_uint array_height, vertex_args** plate_
 	/*setup viewport*/
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
-	glViewport(0, 0, width, height);
+	glViewport(0, IMGUI_OFFSET_TOOLBOX, width, height - IMGUI_OFFSET_TOOLBOX);
     	
 	/*setup camera*/
 	glm::mat4x4 m(1.0F);
@@ -159,15 +164,35 @@ void draw_pixels(cl_uint array_width, cl_uint array_height, vertex_args** plate_
 	*plate_points = static_cast<struct vertex_args*>(glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE));
 }
 
-void calculate_mouse_position(cl_uint array_width, cl_uint array_height, int& point_x, int& point_y, bool& simulate_ocl, GLFWwindow* window)
+void calculate_mouse_position(cl_uint array_width, cl_uint array_height, int& point_x, int& point_y, GLFWwindow* window)
 {
 	/*simulate if the mouse is in the window or if there is not an equilibrium*/
 	double xpos, ypos;
 	glfwGetCursorPos(window, &xpos, &ypos);
 	point_x = xpos;
 	point_y = ypos;
-	if (point_x >= 0 && point_x <= array_width && point_y >= 0 && point_y <= array_height)
-		simulate_ocl = true;
+}
+
+int setup_ogl(cl_uint array_width, cl_uint array_height, GLFWwindow*& window)
+{
+	/* Initialize the openGL library */
+	if (!glfwInit())
+		return -1;
+
+	window = glfwCreateWindow(array_width, array_height + IMGUI_OFFSET_TOOLBOX, APP_NAME, nullptr, nullptr);
+	if (!window)
+	{
+		glfwTerminate();
+		return -1;
+	}
+
+	/* Make the window's context current */
+	glfwMakeContextCurrent(window);
+
+	if (GLEW_OK != glewInit())
+		return -1;
+
+	return 0;
 }
 
 void create_gl_buffer(cl_uint array_width, cl_uint array_height, GLuint& vertex_buffer, struct vertex_args** plate_points)
@@ -186,34 +211,37 @@ void create_gl_buffer(cl_uint array_width, cl_uint array_height, GLuint& vertex_
 	}
 }
 
-int setup_ogl(cl_uint array_width, cl_uint array_height, GLFWwindow*& window)
+void imgui_draw_toolbox(float& air_temperature, float& point_temperature, float& gpu_percent, bool& simulate_ocl, const bool convergence_check)
 {
-	/* Initialize the openGL library */
-	if (!glfwInit())
-		return -1;
+	ImGui::Begin("Toolbox");                     
 
-	window = glfwCreateWindow(array_width, array_height, APP_NAME, nullptr, nullptr);
-	if (!window)
+	ImGui::SliderFloat("Point temperature", &point_temperature, 0.0f, 10000.0f);
+	ImGui::SliderFloat("Air temperature", &air_temperature, 0.0f, 70.0F);
+	ImGui::SliderFloat("f", &gpu_percent, 0.0f, 100.0F);
+	ImGui::Checkbox("Simulation running", &simulate_ocl);
+	if (convergence_check)
 	{
-		glfwTerminate();
-		return -1;
+		ImGui::Text("Convergence reached.");
 	}
 
-	/* Make the window's context current */
-	glfwMakeContextCurrent(window);
-
-	if (GLEW_OK != glewInit())
-		return -1;
-
-	return 0;
+	const auto framerate = ImGui::GetIO().Framerate;
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / framerate, framerate);
+	ImGui::End();
 }
 
-void show_fps(GLFWwindow* pWindow, float fps)
+void imgui_setup(GLFWwindow* window)
 {
-	std::stringstream ss;
-	ss << APP_NAME << " [" << fps << " FPS]";
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	glfwSetWindowTitle(pWindow, ss.str().c_str());
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	
+	// Setup Platform/Renderer bindings
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init();
 }
 
 int main()
@@ -231,12 +259,9 @@ int main()
 	auto point_temperature = 1500.0F;
 	auto point_x = 0;
 	auto point_y = 0;
+	float gpu_percent = 100;
 	auto simulate_ocl = true;
 	struct vertex_args* plate_points = nullptr;
-	
-	LARGE_INTEGER perf_frequency;
-	LARGE_INTEGER performance_count_nd_range_start;
-	LARGE_INTEGER performance_count_nd_range_stop;
 
 	read_config(input_file, preferred_platform, array_width, array_height, plate_initial_temperature, air_temperature, point_temperature);
 
@@ -252,7 +277,7 @@ int main()
 	/*setup openGL*/
 	GLFWwindow* window;
 	if (0 != setup_ogl(array_width, array_height, window)) return -1;
-
+	
 	/*create vertex buffer*/
 	GLuint vertex_buffer;
 	create_gl_buffer(array_width, array_height, vertex_buffer, &plate_points);
@@ -266,41 +291,49 @@ int main()
 	if (CL_SUCCESS != setup_device_memory(&ocl, plate_points, array_width, array_height, plate_initial_temperature))
 		return -1;
 
+	imgui_setup(window);
+	
 	/* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-		QueryPerformanceCounter(&performance_count_nd_range_start);
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
     	/*input*/
-    	calculate_mouse_position(array_width, array_height, point_x, point_y, simulate_ocl, window);
+    	calculate_mouse_position(array_width, array_height, point_x, point_y, window);
 
 		/*kernel execution: only if there is not an equilibrium*/
-		if (simulate_ocl && CL_SUCCESS != execute_kernel(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y))
+		if (simulate_ocl && CL_SUCCESS != execute_kernel(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent))
 			return -1;
 
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
     	/*read temperatures and update the plate points*/
-		simulate_ocl = !read_and_verify(&ocl, array_width, array_height, plate_points);
-		if (simulate_ocl == false) log_info("Convergence reached.\n");
+		const auto convergence_check = read_and_verify(&ocl, array_width, array_height, plate_points);
 
+    	/*draw the pixels representing the temperature*/
 		draw_pixels(array_width, array_height, &plate_points, window, vertex_buffer, program, mvp_location);
     	
+		imgui_draw_toolbox(air_temperature, point_temperature, gpu_percent, simulate_ocl, convergence_check);
+    	
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
         glfwPollEvents();
-
-    	/*performance*/
-		QueryPerformanceCounter(&performance_count_nd_range_stop);
-		QueryPerformanceFrequency(&perf_frequency);
-		float mstime = 1000.0f * static_cast<float>(performance_count_nd_range_stop.QuadPart - performance_count_nd_range_start.QuadPart) / static_cast<float>(perf_frequency.QuadPart);
-		float fps = 1000.0f / mstime;
-		show_fps(window, fps);
     }
 
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	
+	glfwDestroyWindow(window);
 	glfwTerminate();
+	
     return 0;
 }
