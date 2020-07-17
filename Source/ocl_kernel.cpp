@@ -85,7 +85,7 @@ int create_and_build_program(ocl_args_d_t* ocl, const char* program_name)
     return err;
 }
 
-cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float air_temperature, cl_uint point_x, cl_uint point_y, cl_float point_temperature, char axis)
+cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, cl_float air_temperature, cl_uint point_x, cl_uint point_y, cl_float point_temperature)
 {
     auto err =  clSetKernelArg(ocl->kernel, 0, sizeof(cl_mem), static_cast<void*>(&ocl->input));
     if (CL_SUCCESS != err)
@@ -143,10 +143,10 @@ cl_uint set_kernel_arguments(ocl_args_d_t* ocl, cl_uint width, cl_uint height, c
         return err;
     }
 
-    err = clSetKernelArg(ocl->kernel, 8, sizeof(char), static_cast<void*>(&axis));
+    err = clSetKernelArg(ocl->kernel, 8, sizeof(cl_mem), static_cast<void*>(&ocl->plate_points));
     if (CL_SUCCESS != err)
     {
-        log_error("Error: Failed to set argument axis, returned %s\n", translate_open_cl_error(err));
+        log_error("Error: Failed to set argument plate_points, returned %s\n", translate_open_cl_error(err));
         return err;
     }
 

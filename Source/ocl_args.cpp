@@ -22,7 +22,8 @@ ocl_args_d_t::ocl_args_d_t() :
 	device_version(OPENCL_VERSION_1_2),
 	compiler_version(OPENCL_VERSION_1_2),
 	input(nullptr),
-	output(nullptr)
+	output(nullptr),
+	plate_points(nullptr)
 {
 }
 
@@ -53,6 +54,12 @@ ocl_args_d_t::~ocl_args_d_t()
         err = clReleaseMemObject(output);
         if (CL_SUCCESS != err)
 	        log_error("Error: clReleaseMemObject returned '%s'.\n", translate_open_cl_error(err));
+    }
+    if (plate_points)
+    {
+        err = clReleaseMemObject(plate_points);
+        if (CL_SUCCESS != err)
+            log_error("Error: clReleaseMemObject returned '%s'.\n", translate_open_cl_error(err));
     }
     if (command_queue)
     {

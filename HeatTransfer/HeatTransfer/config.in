@@ -1,0 +1,6 @@
+platform:Intel
+width:640
+height:480 
+initial_temp:30.0 
+air_temp:40.0 
+point_temp:5500.0

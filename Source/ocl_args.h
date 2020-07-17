@@ -17,6 +17,7 @@ struct ocl_args_d_t
 
     cl_mem           input;
     cl_mem           output;
+    cl_mem           plate_points;
 };
 
 

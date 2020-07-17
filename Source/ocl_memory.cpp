@@ -14,7 +14,7 @@ void generate_input(cl_float* input_array, const cl_uint array_width, const cl_u
 	    input_array[i] = temperature;
 }
 
-int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, const cl_uint array_width, const cl_uint array_height)
+int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, struct vertex_args* plate_points, const cl_uint array_width, const cl_uint array_height)
 {
     auto err = CL_SUCCESS;
 
@@ -54,6 +54,13 @@ int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, const cl_uint ar
         return err;
     }
 
+    ocl->plate_points = clCreateBuffer(ocl->context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, array_width * array_height * sizeof(struct vertex_args), plate_points, &err);
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: clCreateBuffer for output returned %s\n", translate_open_cl_error(err));
+        return err;
+    }
+
 
     return CL_SUCCESS;
 }
@@ -88,31 +95,7 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
     const auto size = width * height;
 
     for (unsigned int k = 0; k < size; k++)
-    {
-        if (result_ptr[k] < temperature_color[9].x)
-        {
-            for (auto i = 0; i < TEMPERATURES_COUNT - 1; i++)
-            {
-                if (result_ptr[k] < temperature_color[i].y)
-                {
-                    const auto diff = result_ptr[k] - temperature_color[i].x;
-                    const auto diff_total = temperature_color[i].y - temperature_color[i].x;
-                    const auto proc = diff / diff_total;
-
-                    plate_points[k].r = temperature_color[i].r + (temperature_color[i + 1].r - temperature_color[i].r) * proc;
-                    plate_points[k].g = temperature_color[i].g + (temperature_color[i + 1].g - temperature_color[i].g) * proc;
-                    plate_points[k].b = temperature_color[i].b + (temperature_color[i + 1].b - temperature_color[i].b) * proc;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            plate_points[k].r = temperature_color[TEMPERATURES_COUNT - 1].r;
-            plate_points[k].g = temperature_color[TEMPERATURES_COUNT - 1].g;
-            plate_points[k].b = temperature_color[TEMPERATURES_COUNT - 1].b;
-        }
-    		
+    {    		
 		if (result && abs(input_ptr[k] - result_ptr[k]) >= CL_FLT_EPSILON * 1000)
 		    result = false;
     }
