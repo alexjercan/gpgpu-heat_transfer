@@ -11,7 +11,7 @@ void generate_input(cl_float* input_array, const cl_uint array_width, const cl_u
 {
     const auto array_size = array_width * array_height;
     for (cl_uint i = 0; i < array_size; ++i)
-	    input_array[i] = temperature;
+		input_array[i] = temperature;
 }
 
 int create_buffer_arguments(ocl_args_d_t* ocl, cl_float* input, struct vertex_args* plate_points, const cl_uint array_width, const cl_uint array_height)
@@ -77,6 +77,12 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
     auto* const result_ptr = static_cast<cl_float*>(clEnqueueMapImage(ocl->command_queue, ocl->output, true, CL_MAP_READ, origin, region,
         &image_row_pitch, &image_slice_pitch, 0, nullptr, nullptr, &err));
 
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: clEnqueueMapBuffer returned %s\n", translate_open_cl_error(err));
+        return false;
+    }
+	
     auto* const input_ptr = static_cast<cl_float*>(clEnqueueMapImage(ocl->command_queue, ocl->input, true, CL_MAP_READ, origin, region,
         &image_row_pitch, &image_slice_pitch, 0, nullptr, nullptr, &err));
 	
@@ -104,6 +110,14 @@ bool read_and_verify(ocl_args_d_t* ocl, const cl_uint width, const cl_uint heigh
     if (CL_SUCCESS != err)
     {
         log_error("Error: clEnqueueUnmapMemObject() returned %s\n", translate_open_cl_error(err));
+        return false;
+    }
+
+    err = clEnqueueUnmapMemObject(ocl->command_queue, ocl->input, input_ptr, 0, nullptr, nullptr);
+    if (CL_SUCCESS != err)
+    {
+        log_error("Error: clEnqueueUnmapMemObject() returned %s\n", translate_open_cl_error(err));
+        return false;
     }
 
     return result;

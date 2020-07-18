@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <tchar.h>
+#include <thread>
 #include <vector>
 
 #include "CL/cl.h"
@@ -32,6 +33,7 @@
 
 #define APP_NAME "Heat Transfer Simulation"
 #define IMGUI_OFFSET_TOOLBOX 200
+#define CPU_THREAD_COUNT 4
 
 static const char* vertex_shader_text =
 "#version 110\n"
@@ -82,7 +84,7 @@ void log_device_info(const ocl_args_d_t& ocl)
 	}
 }
 
-int setup_device_memory(ocl_args_d_t* ocl, struct vertex_args* plate_points, const cl_uint array_width, const cl_uint array_height, const float plate_initial_temperature)
+int setup_device_memory(ocl_args_d_t* ocl, struct vertex_args* plate_points,const cl_uint array_width, const cl_uint array_height, const float plate_initial_temperature)
 {
 	const auto optimized_size = ((sizeof(cl_float) * array_width * array_height - 1) / 64 + 1) * 64;
 	auto* input = static_cast<cl_float*>(_aligned_malloc(optimized_size, 4096));
@@ -91,23 +93,19 @@ int setup_device_memory(ocl_args_d_t* ocl, struct vertex_args* plate_points, con
 		log_error("Error: _aligned_malloc failed to allocate buffers.\n");
 		return -1;
 	}
-
+	
 	generate_input(input, array_width, array_height, plate_initial_temperature);
 
 	if (CL_SUCCESS != create_buffer_arguments(ocl, input, plate_points, array_width, array_height))
 		return -1;
 
 	_aligned_free(input);
-
+	
     return CL_SUCCESS;
 }
 
 int execute_kernel(ocl_args_d_t& ocl, const cl_uint array_width, const cl_uint array_height, float air_temperature, float point_temperature, unsigned point_x, unsigned point_y, cl_float gpu_percent)
-{
-	auto* aux = ocl.output;
-	ocl.output = ocl.input;
-	ocl.input = aux;
-	
+{	
 	if (CL_SUCCESS != set_kernel_arguments(&ocl, array_width, array_height, air_temperature, point_x, point_y, point_temperature, gpu_percent))
 		return -1;
 	if (CL_SUCCESS != execute_add_kernel(&ocl, array_width, array_height))
@@ -244,6 +242,124 @@ void imgui_setup(GLFWwindow* window)
 	ImGui_ImplOpenGL3_Init();
 }
 
+void cpu_simulate(const int t_id, const float* input, float* output, const cl_int width, const cl_int height, const float air_temperature, const cl_int point_x, const cl_int point_y, const float point_temperature, struct vertex_args* plate_points, const float gpu_percent)
+{
+	const auto cpu_work_size = width * height * (100 - static_cast<int>(gpu_percent)) / 100;
+	const auto cpu_thread_work_size = cpu_work_size / CPU_THREAD_COUNT;
+
+	const auto thread_start = (width * height * static_cast<int>(gpu_percent)) / 100 + t_id * cpu_thread_work_size;
+	auto thread_end = thread_start + cpu_thread_work_size;
+	if (t_id == CPU_THREAD_COUNT - 1)
+		thread_end = width * height;
+		
+
+	auto const gaussian_kernel = 1 / 9.0F;
+
+	for (auto i = thread_start; i < thread_end; i++)
+	{
+		output[i] = 0;
+		if (point_y * width + point_x == i)
+		{
+			output[i] = point_temperature;
+		}
+		else {
+			for (auto j = -1; j <= 1; j++)
+			{
+				for (auto k = -1; k <= 1; k++)
+				{
+					if (i % width + j < 0 || i % width + j >= width || i / width + k < 0 || i / width + k >= height)
+						output[i] += air_temperature * gaussian_kernel;
+					else 
+						output[i] += input[i + j * width + k] * gaussian_kernel;
+				}
+			}
+		}
+
+		if (output[i] < temperature_color[TEMPERATURES_COUNT - 1].x)
+		{
+			for (auto j = 0; j < TEMPERATURES_COUNT - 1; j++)
+			{
+				if (output[i] < temperature_color[j].y)
+				{
+					const auto diff = output[i] - temperature_color[j].x;
+					const auto diff_total = temperature_color[j].y - temperature_color[j].x;
+					const auto proc = diff / diff_total;
+
+					plate_points[i].r = temperature_color[j].r + (temperature_color[j + 1].r - temperature_color[j].r) * proc;
+					plate_points[i].g = temperature_color[j].g + (temperature_color[j + 1].g - temperature_color[j].g) * proc;
+					plate_points[i].b = temperature_color[j].b + (temperature_color[j + 1].b - temperature_color[j].b) * proc;
+					break;
+				}
+			}
+		}
+		else
+		{
+			plate_points[i].r = temperature_color[TEMPERATURES_COUNT - 1].r;
+			plate_points[i].g = temperature_color[TEMPERATURES_COUNT - 1].g;
+			plate_points[i].b = temperature_color[TEMPERATURES_COUNT - 1].b;
+		}
+	}
+}
+
+int run_cpu_thread(const ocl_args_d_t& ocl, cl_uint array_width, cl_uint array_height, float air_temperature, float point_temperature, int point_x, int point_y, float gpu_percent, vertex_args* plate_points)
+{
+	std::thread cpu_threads[CPU_THREAD_COUNT];
+	size_t origin[] = { 0, 0, 0 };
+	size_t region[] = { array_width, array_height, 1 };
+	size_t image_row_pitch;
+	size_t image_slice_pitch;
+
+	cl_int err;
+	auto* input = static_cast<cl_float*>(clEnqueueMapImage(ocl.command_queue, ocl.input, true, CL_MAP_READ, origin, region,
+	                                                       &image_row_pitch, &image_slice_pitch, 0, nullptr, nullptr, &err));
+	if (CL_SUCCESS != err)
+	{
+		log_error("Error: clEnqueueMapImage returned %s\n", translate_open_cl_error(err));
+		return -1;
+	}
+	auto* output = static_cast<cl_float*>(clEnqueueMapImage(ocl.command_queue, ocl.output, true, CL_MAP_WRITE, origin, region,
+	                                                        &image_row_pitch, &image_slice_pitch, 0, nullptr, nullptr, &err));
+	if (CL_SUCCESS != err)
+	{
+		log_error("Error: clEnqueueMapImage returned %s\n", translate_open_cl_error(err));
+		return -1;
+	}
+
+	err = clFinish(ocl.command_queue);
+	if (CL_SUCCESS != err)
+	{
+		log_error("Error: clFinish returned %s\n", translate_open_cl_error(err));
+		return -1;
+	}
+    		
+	for (auto i = 0; i < CPU_THREAD_COUNT; i++)
+	{
+		std::thread t(cpu_simulate, i, input, output, array_width, array_height, air_temperature, point_x, point_y, point_temperature, plate_points, gpu_percent);
+		cpu_threads[i] = std::move(t);
+	}
+
+	for (auto& cpu_thread : cpu_threads)
+	{
+		cpu_thread.join();
+	}
+    		
+	err = clEnqueueUnmapMemObject(ocl.command_queue, ocl.input, input, 0, nullptr, nullptr);
+	if (CL_SUCCESS != err)
+	{
+		log_error("Error: clEnqueueUnmapMemObject returned %s\n", translate_open_cl_error(err));
+		return -1;
+	}
+
+	err = clEnqueueUnmapMemObject(ocl.command_queue, ocl.output, output, 0, nullptr, nullptr);
+	if (CL_SUCCESS != err)
+	{
+		log_error("Error: clEnqueueUnmapMemObject returned %s\n", translate_open_cl_error(err));
+		return -1;
+	}
+
+	return CL_SUCCESS;
+}
+
 int main()
 {
 	ocl_args_d_t ocl;
@@ -268,7 +384,7 @@ int main()
 	/*setup openCL kernel*/
 	if (CL_SUCCESS != setup_ocl(&ocl, device_type, program_name, kernel_name, preferred_platform))
 		return -1;
-
+	
 	/*show device info*/
 	log_device_info(ocl);
 	/*show simulation info*/
@@ -290,7 +406,8 @@ int main()
 	/*setup device global memory*/
 	if (CL_SUCCESS != setup_device_memory(&ocl, plate_points, array_width, array_height, plate_initial_temperature))
 		return -1;
-
+	
+	/*UI setup*/
 	imgui_setup(window);
 	
 	/* Loop until the user closes the window */
@@ -299,14 +416,18 @@ int main()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
+    	
     	/*input*/
     	calculate_mouse_position(array_width, array_height, point_x, point_y, window);
+    	
+		/*CPU threads*/
+    	if (gpu_percent < 100 && CL_SUCCESS != run_cpu_thread(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent, plate_points))
+	        return -1;
 
 		/*kernel execution: only if there is not an equilibrium*/
 		if (simulate_ocl && CL_SUCCESS != execute_kernel(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent))
 			return -1;
-
+    	
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -326,6 +447,10 @@ int main()
 
         /* Poll for and process events */
         glfwPollEvents();
+
+		auto* aux = ocl.output;
+		ocl.output = ocl.input;
+		ocl.input = aux;
     }
 
 	ImGui_ImplOpenGL3_Shutdown();

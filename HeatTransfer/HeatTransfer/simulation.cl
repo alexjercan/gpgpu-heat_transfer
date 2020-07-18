@@ -23,7 +23,7 @@ __constant struct vertex_args temperature_color[TEMPERATURES_COUNT] = {
 	{1315.0F, -1.0F, 1.0F, 1.0F, 1.0F}, //White
 };
 
-__kernel void simulate(read_only image2d_t input, write_only image2d_t output, uint width, uint height, float air_temperature, uint point_x, uint point_y, float point_temperature, __global struct vertex_args* plate_points, float gpu_percenet)
+__kernel void simulate(read_only image2d_t input, write_only image2d_t output, uint width, uint height, float air_temperature, uint point_x, uint point_y, float point_temperature, __global struct vertex_args* plate_points, float gpu_percent)
 {
     int2 coords = (int2)(get_global_id(0), get_global_id(1));
 	int global_index = coords.y * width + coords.x;
@@ -31,7 +31,7 @@ __kernel void simulate(read_only image2d_t input, write_only image2d_t output, u
 	float4 ext_color = (float4)(air_temperature, air_temperature, air_temperature, air_temperature);
 	int i, j;
 
-	if (global_index > width * height * gpu_percenet / 100.0F)
+	if (global_index > width * height * gpu_percent / 100.0F)
 	{
 		return;
 	}
@@ -39,20 +39,18 @@ __kernel void simulate(read_only image2d_t input, write_only image2d_t output, u
 	if (point_x == coords.x && point_y == coords.y)
 	{
 		color = (float4)(point_temperature, point_temperature, point_temperature, point_temperature);
-		write_imagef(output, coords, color);
-		return;
 	}
-
-	for (i = -1; i <= 1; i++)
-	{
-		for (j = -1; j <= 1; j++)
+	else {
+		for (i = -1; i <= 1; i++)
 		{
-			if (coords.x + i < 0 || coords.x + i >= width || coords.y + i < 0 || coords.y + i >= height) color += ext_color * gaussian_kernel;
-			else color += read_imagef(input, sampler, (int2)(coords.x + i, coords.y + j)) * gaussian_kernel;
+			for (j = -1; j <= 1; j++)
+			{
+				if (coords.x + i < 0 || coords.x + i >= width || coords.y + j < 0 || coords.y + j >= height) color += ext_color * gaussian_kernel;
+				else color += read_imagef(input, sampler, (int2)(coords.x + i, coords.y + j)) * gaussian_kernel;
+			}
 		}
 	}
-
-	if (color.x < temperature_color[9].x)
+	if (color.x < temperature_color[TEMPERATURES_COUNT - 1].x)
     {
         for (int i = 0; i < TEMPERATURES_COUNT - 1; i++)
         {
