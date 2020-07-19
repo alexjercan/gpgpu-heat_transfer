@@ -139,7 +139,7 @@
       <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\include;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\imgui;$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\include;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;__x86_64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <MinimalRebuild>true</MinimalRebuild>
@@ -165,7 +165,7 @@
       <Device>1</Device>
     </Intel_OpenCL_Build_Rules>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\include;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\Dependencies\imgui;$(SolutionDir)..\Dependencies\glm;$(SolutionDir)..\Dependencies\GLEW\include;$(SolutionDir)..\Dependencies\GLFW\include;$(INTELOCLSDKROOT)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;__x86_64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>true</MinimalRebuild>
