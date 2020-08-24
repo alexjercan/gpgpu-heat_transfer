@@ -421,11 +421,11 @@ int main()
     	calculate_mouse_position(array_width, array_height, point_x, point_y, window);
     	
 		/*CPU threads*/
-    	if (gpu_percent < 100 && CL_SUCCESS != run_cpu_thread(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent, plate_points))
+    	if (simulate_ocl && gpu_percent < 100 && CL_SUCCESS != run_cpu_thread(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent, plate_points))
 	        return -1;
 
 		/*kernel execution: only if there is not an equilibrium*/
-		if (simulate_ocl && CL_SUCCESS != execute_kernel(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent))
+		if (simulate_ocl && gpu_percent > 0 && CL_SUCCESS != execute_kernel(ocl, array_width, array_height, air_temperature, point_temperature, point_x, point_y, gpu_percent))
 			return -1;
     	
 		/* Render here */
