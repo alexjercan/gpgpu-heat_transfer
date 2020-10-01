@@ -23,6 +23,10 @@
   The heat source can be moved using the mouse. Also some initial parameters, such as the point temperature and the air temperature, can be changed during the simulation.
   To proove that this simulation runs better using a GPU, I added the possibility to balance the load of computation between the GPU and the CPU. This can be done using the slider labeled "f" in the simulation. When f is equal to 100, the simulation is ran only on the GPU, otherwise the CPU will use 4 threads to make some calculations aswell.
   
-  
+- Config File Example
 
-  
+![alt text](https://i.imgur.com/XEYwQYO.jpg)
+
+- Simulation Example
+
+![alt text](https://i.imgur.com/BQoqi4K.jpg)
